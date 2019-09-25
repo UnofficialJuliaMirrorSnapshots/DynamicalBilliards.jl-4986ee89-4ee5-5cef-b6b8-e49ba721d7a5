@@ -181,6 +181,7 @@ of escape times.
   billiard). The size of the vector is irrelevant
   since it is internally normalized.
 * `isdoor::Bool` : Flag of whether this `FiniteWall` instance is a "Door".
+  Defaults to `false`.
 * `name::String` : Name of the obstacle, given for user convenience.
   Defaults to "Finite Wall".
 """
@@ -207,6 +208,7 @@ function FiniteWall(sp::AbstractVector, ep::AbstractVector,
     return FiniteWall{T}(SVector{2,T}(sp), SVector{2,T}(ep), SVector{2,T}(n),
     w, SVector{2,T}(center), isdoor, name)
 end
+FiniteWall(a, b, c, n::String) = FiniteWall(a, b, c, false, n)
 
 isdoor(w) = w.isdoor
 
@@ -421,8 +423,11 @@ outside of the disk, negative otherwise.
 
     distance(p::AbstractParticle, bd::Billiard)
 Return minimum `distance(p, obst)` for all `obst` in `bd`.
-If the `distance(p, bd)` is negative this means that the particle is outside
-the billiard.
+If the `distance(p, bd)` is negative and `bd` is convex,
+this means that the particle is outside the billiard.
+
+**WARNING** : `distance(p, bd)` may give negative values for non-convex
+billiards, or billiards that are composed of several connected sub-billiards.
 
 All `distance` functions can also be given a position (vector) instead of a particle.
 """
@@ -460,7 +465,6 @@ function distance(pos::AbstractVector{T}, s::Semicircle{T}) where {T}
         return one(T)
     end
 end
-
 
 function distance(pos::SV, e::Ellipse{T})::T where {T}
     d = ((pos[1] - e.c[1])/e.a)^2 + ((pos[2]-e.c[2])/e.b)^2 - 1.0
